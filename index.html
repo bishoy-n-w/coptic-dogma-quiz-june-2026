@@ -215,6 +215,37 @@
             font-family: 'Arial', sans-serif;
         }
 
+        /* Fullscreen Button Styles */
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 18px;
+            font-size: 0.95em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fullscreen-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        .fullscreen-btn:active {
+            transform: translateY(0);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -224,6 +255,10 @@
 </head>
 <body>
 
+<button id="fullscreen-toggle" class="fullscreen-btn" onclick="toggleFullScreen()">
+    ⛶ Fullscreen
+</button>
+
 <div class="container">
     <div class="header">
         <h1>Dogma Quiz / استبيان العقيدة</h1>
@@ -231,8 +266,7 @@
     </div>
 
     <div id="survey-container">
-        <!-- Questions injected via JS -->
-    </div>
+        </div>
 </div>
 
 <script>
@@ -387,7 +421,7 @@
             ar: "نعمة الله لا تُقاوم؛ ولا يمكن للإنسان رفضها.",
             correctAnswer: "Strongly disagree",
             exp_en: "God respects human free will. We can choose to cooperate with His grace (synergy) or reject it.",
-            exp_ar: "الله يحترم الإرادة الحرة للإنسان. يمكننا أن نختار التعاون مع نعمته (التآزر) أو رفضها.",
+            exp_ar: "الله يحترم الإرادة الحرة للإنسان. يمكننا أن ختار التعاون مع نعمته (التآزر) أو رفضها.",
             verse_en: "O Jerusalem, Jerusalem... How often I wanted to gather your children together... but you were not willing!",
             verse_ref_en: "Matthew 23:37 (NKJV)",
             verse_ar: "يَا أُورُشَلِيمُ، يَا أُورُشَلِيمُ... كَمْ مَرَّةٍ أَرَدْتُ أَنْ أَجْمَعَ أَوْلاَدَكِ... وَلَمْ تُرِيدُوا!",
@@ -799,6 +833,29 @@
         
         feedbackDiv.style.display = 'block';
     }
+
+    // Fullscreen Toggle Logic
+    window.toggleFullScreen = function() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    // Update button text when fullscreen state changes (e.g., via ESC key)
+    document.addEventListener('fullscreenchange', () => {
+        const btn = document.getElementById('fullscreen-toggle');
+        if (document.fullscreenElement) {
+            btn.innerHTML = '✖ Exit Fullscreen';
+        } else {
+            btn.innerHTML = '⛶ Fullscreen';
+        }
+    });
 
     // Initialize application on DOM load
     document.addEventListener('DOMContentLoaded', renderSurvey);
