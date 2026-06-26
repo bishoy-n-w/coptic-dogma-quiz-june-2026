@@ -1,0 +1,809 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coptic Orthodox Dogma Survey</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --correct-color: #27ae60;
+            --wrong-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+        }
+
+        .question-text-en {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .question-text-ar {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 25px;
+            direction: rtl;
+            font-family: 'Arial', sans-serif;
+            color: var(--secondary-color);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 8px;
+            background: #f1f3f5;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 0.95em;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .option-label .ar-opt {
+            font-size: 0.9em;
+            margin-top: 4px;
+            color: #555;
+        }
+
+        .option-label:hover:not(.disabled) {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+
+        .option-label input[type="radio"] {
+            display: none;
+        }
+
+        /* Classes added via JS after answer */
+        .options-grid.answered .option-label {
+            cursor: default;
+        }
+
+        .option-label.correct-choice {
+            background-color: var(--correct-color) !important;
+            color: white !important;
+            border-color: #219653 !important;
+        }
+
+        .option-label.correct-choice .ar-opt {
+            color: #e8f5e9 !important;
+        }
+
+        .option-label.wrong-choice {
+            background-color: var(--wrong-color) !important;
+            color: white !important;
+            border-color: #c0392b !important;
+        }
+
+        .option-label.wrong-choice .ar-opt {
+            color: #fce4ec !important;
+        }
+
+        .option-label.dimmed-choice {
+            opacity: 0.4;
+            background: #f8f9fa;
+        }
+
+        .feedback-section {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 6px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .feedback-section.correct {
+            background-color: #e8f8f5;
+            border-left: 5px solid var(--correct-color);
+        }
+
+        .feedback-section.wrong {
+            background-color: #fdedec;
+            border-left: 5px solid var(--wrong-color);
+        }
+
+        .result-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .correct .result-title { color: var(--correct-color); }
+        .wrong .result-title { color: var(--wrong-color); }
+
+        .correct-view-box {
+            background: rgba(255,255,255,0.6);
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.95em;
+            color: #333;
+            border: 1px dashed #ccc;
+        }
+
+        .explanation {
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        .explanation .ar {
+            direction: rtl;
+            margin-top: 8px;
+            color: var(--secondary-color);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .verses {
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 6px;
+            font-style: italic;
+            border: 1px solid #e1e8ed;
+        }
+
+        .verses .verse-ref {
+            font-weight: bold;
+            font-style: normal;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .verses .ar-verse {
+            direction: rtl;
+            margin-top: 15px;
+            font-family: 'Arial', sans-serif;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Dogma Quiz / استبيان العقيدة</h1>
+        <p>Coptic Orthodox Theology Assessment - June 2026</p>
+    </div>
+
+    <div id="survey-container">
+        <!-- Questions injected via JS -->
+    </div>
+</div>
+
+<script>
+    // Translation map for options
+    const arOptions = {
+        "Strongly agree": "أوافق بشدة",
+        "Agree": "أوافق",
+        "Not sure": "غير متأكد",
+        "Disagree": "لا أوافق",
+        "Strongly disagree": "لا أوافق بشدة"
+    };
+
+    // 40 Coptic Orthodox Dogma Questions
+    const surveyData = [
+        // --- SCRIPTURE & TRADITION ---
+        {
+            en: "The Bible alone is the final authority for Christian faith and practice.",
+            ar: "الكتاب المقدس وحده هو المرجع النهائي للإيمان والحياة المسيحية.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "The Orthodox Church teaches that Holy Tradition and Scripture together form the deposit of faith. The Bible itself is a product of the early Church's Holy Tradition.",
+            exp_ar: "تعلم الكنيسة الأرثوذكسية أن التقليد المقدس والكتاب المقدس معًا يشكلان وديعة الإيمان. الكتاب المقدس نفسه هو ثمرة لتقليد الكنيسة.",
+            verse_en: "Therefore, brethren, stand fast and hold the traditions which you were taught, whether by word or our epistle.",
+            verse_ref_en: "2 Thessalonians 2:15 (NKJV)",
+            verse_ar: "فَاثْبُتُوا إِذًا أَيُّهَا الإِخْوَةُ وَتَمَسَّكُوا بِالتَّقَالِيدِ الَّتِي تَعَلَّمْتُمُوهَا، سَوَاءٌ كَانَ بِالْكَلاَمِ أَمْ بِرِسَالَتِنَا.",
+            verse_ref_ar: "تسالونيكي الثانية 2:15 (فاندايك)"
+        },
+        {
+            en: "Divine Revelation comes through both Holy Scripture and Holy Tradition.",
+            ar: "الإعلان الإلهي يسلم من خلال الكتاب المقدس والتقليد المقدس معا.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Holy Tradition is the life of the Holy Spirit in the Church, which produced the Scriptures and correctly interprets them.",
+            exp_ar: "التقليد المقدس هو حياة الروح القدس في الكنيسة، وهو الذي أثمر الكتاب المقدس ويفسره بشكل صحيح.",
+            verse_en: "And the things that you have heard from me among many witnesses, commit these to faithful men who will be able to teach others also.",
+            verse_ref_en: "2 Timothy 2:2 (NKJV)",
+            verse_ar: "وَمَا سَمِعْتَهُ مِنِّي بِشُهُودٍ كَثِيرِينَ، أَوْدِعْهُ أُنَاسًا أُمَنَاءَ، يَكُونُونَ أَكْفَاءً أَنْ يُعَلِّمُوا آخَرِينَ أَيْضًا.",
+            verse_ref_ar: "تيموثاوس الثانية 2:2 (فاندايك)"
+        },
+        {
+            en: "The Deuterocanonical books (Apocrypha) are not inspired and shouldn't be in the Bible.",
+            ar: "الأسفار القانونية الثانية (الأبوكريفا) غير موحى بها ولا ينبغي أن تكون في الكتاب المقدس.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "The Orthodox Church accepts the Deuterocanonical books as fully inspired scripture, used by the early Church and the Apostles.",
+            exp_ar: "تقبل الكنيسة الأرثوذكسية الأسفار القانونية الثانية كأسفار موحى بها بالكامل، وقد استخدمتها الكنيسة الأولى والرسل.",
+            verse_en: "All Scripture is given by inspiration of God, and is profitable for doctrine...",
+            verse_ref_en: "2 Timothy 3:16 (NKJV)",
+            verse_ar: "كُلُّ الْكِتَابِ هُوَ مُوحًى بِهِ مِنَ اللهِ، وَنَافِعٌ لِلتَّعْلِيمِ...",
+            verse_ref_ar: "تيموثاوس الثانية 3:16 (فاندايك)"
+        },
+        // --- GOD & TRINITY ---
+        {
+            en: "The Holy Trinity is three distinct gods who work together.",
+            ar: "الثالوث القدوس هو ثلاثة آلهة منفصلة يعملون معاً.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "We believe in One God in three distinct, co-equal, and co-eternal Persons (Hypostases). Believing in three gods is Tritheism.",
+            exp_ar: "نؤمن بإله واحد في ثلاثة أقانيم متمايزة، متساوية، وأزلية. الإيمان بثلاثة آلهة هو بدعة تعدد الآلهة.",
+            verse_en: "Hear, O Israel: The Lord our God, the Lord is one!",
+            verse_ref_en: "Deuteronomy 6:4 (NKJV)",
+            verse_ar: "اِسْمَعْ يَا إِسْرَائِيلُ: الرَّبُّ إِلهُنَا رَبٌّ وَاحِدٌ.",
+            verse_ref_ar: "تثنية 6:4 (فاندايك)"
+        },
+        {
+            en: "The Holy Spirit proceeds from the Father and the Son (Filioque).",
+            ar: "الروح القدس منبثق من الآب والابن معاً.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "The Orthodox Church strictly adheres to the original Nicene Creed, affirming that the Holy Spirit proceeds from the Father alone.",
+            exp_ar: "تلتزم الكنيسة الأرثوذكسية تماماً بقانون الإيمان النيقاوي الأصلي، مؤكدة أن الروح القدس ينبثق من الآب وحده.",
+            verse_en: "But when the Helper comes, whom I shall send to you from the Father, the Spirit of truth who proceeds from the Father, He will testify of Me.",
+            verse_ref_en: "John 15:26 (NKJV)",
+            verse_ar: "وَمَتَى جَاءَ الْمُعَزِّي الَّذِي سَأُرْسِلُهُ أَنَا إِلَيْكُمْ مِنَ الآبِ، رُوحُ الْحَقِّ، الَّذِي مِنْ عِنْدِ الآبِ يَنْبَثِقُ، فَهُوَ يَشْهَدُ لِي.",
+            verse_ref_ar: "يوحنا 15:26 (فاندايك)"
+        },
+        {
+            en: "Jesus Christ is fully God and fully Man.",
+            ar: "يسوع المسيح هو إله كامل وإنسان كامل.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Christ is perfect in His divinity and perfect in His humanity, united in one incarnate nature without mingling, confusion, or alteration.",
+            exp_ar: "المسيح كامل في لاهوته وكامل في ناسوته، متحدان في طبيعة واحدة متجسدة بغير اختلاط ولا امتزاج ولا تغيير.",
+            verse_en: "For in Him dwells all the fullness of the Godhead bodily.",
+            verse_ref_en: "Colossians 2:9 (NKJV)",
+            verse_ar: "فَإِنَّهُ فِيهِ يَحِلُّ كُلُّ مِلْءِ اللاَّهُوتِ جَسَدِيًّا.",
+            verse_ref_ar: "كولوسي 2:9 (فاندايك)"
+        },
+        {
+            en: "After the Incarnation, Christ has two separate natures.",
+            ar: "بعد التجسد، للمسيح طبيعتان منفصلتان.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Coptic Orthodoxy believes in Miaphysitism: One Incarnate Nature of God the Word. Dividing Him into two natures post-union implies two persons.",
+            exp_ar: "تؤمن الأرثوذكسية القبطية بالطبيعة الواحدة المتجسدة لله الكلمة. تقسيمه إلى طبيعتين بعد الاتحاد يوحي بوجود شخصين.",
+            verse_en: "And the Word became flesh and dwelt among us...",
+            verse_ref_en: "John 1:14 (NKJV)",
+            verse_ar: "وَالْكَلِمَةُ صَارَ جَسَدًا وَحَلَّ بَيْنَنَا...",
+            verse_ref_ar: "يوحنا 1:14 (فاندايك)"
+        },
+        {
+            en: "Christ's divinity parted from His humanity on the Cross.",
+            ar: "لاهوت المسيح فارق ناسوته على الصليب.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "As the Divine Liturgy states: 'His divinity parted not from His humanity for a single moment nor a twinkling of an eye.'",
+            exp_ar: "كما يذكر القداس الإلهي: 'لاهوته لم يفارق ناسوته لحظة واحدة ولا طرفة عين.'",
+            verse_en: "God was in Christ reconciling the world to Himself...",
+            verse_ref_en: "2 Corinthians 5:19 (NKJV)",
+            verse_ar: "أَيْ إِنَّ اللهَ كَانَ فِي الْمَسِيحِ مُصَالِحًا الْعَالَمَ لِنَفْسِهِ...",
+            verse_ref_ar: "كورنثوس الثانية 5:19 (فاندايك)"
+        },
+        // --- SALVATION & GRACE ---
+        {
+            en: "Humanity inherited the guilt of Adam's sin.",
+            ar: "البشرية ورثت ذنب خطية آدم.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "We inherit the *consequences* of Adam's sin (mortality, corruption, and a tendency to sin), not his personal *guilt*.",
+            exp_ar: "نحن نرث *نتائج* خطية آدم (الموت، الفساد، والميل للخطية)، وليس *ذنبه* الشخصي.",
+            verse_en: "The son shall not bear the guilt of the father, nor the father bear the guilt of the son.",
+            verse_ref_en: "Ezekiel 18:20 (NKJV)",
+            verse_ar: "اَلابْنُ لاَ يَحْمِلُ مِنْ إِثْمِ الأَبِ، وَالأَبُ لاَ يَحْمِلُ مِنْ إِثْمِ الابْنِ.",
+            verse_ref_ar: "حزقيال 18:20 (فاندايك)"
+        },
+        {
+            en: "A person is saved by faith alone.",
+            ar: "يخلص الإنسان بالإيمان وحده.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Salvation is a synergistic process. True faith must be active and expressed through works of love, obedience, and partaking in the Sacraments.",
+            exp_ar: "الخلاص هو عمل مشترك. الإيمان الحقيقي يجب أن يكون عاملاً ومُعبراً عنه من خلال أعمال المحبة والمشاركة في الأسرار.",
+            verse_en: "You see then that a man is justified by works, and not by faith only.",
+            verse_ref_en: "James 2:24 (NKJV)",
+            verse_ar: "تَرَوْنَ إِذًا أَنَّهُ بِالأَعْمَالِ يَتَبَرَّرُ الإِنْسَانُ، لاَ بِالإِيمَانِ وَحْدَهُ.",
+            verse_ref_ar: "يعقوب 2:24 (فاندايك)"
+        },
+        {
+            en: "God predestines some people to heaven and others to hell regardless of their choices.",
+            ar: "الله يقدر مسبقاً لبعض الناس الذهاب للسماء وللبعض الآخر الذهاب للجحيم بغض النظر عن اختياراتهم.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "God desires all to be saved. Predestination in Orthodoxy is based on God's foreknowledge of our free choices, not an arbitrary decree.",
+            exp_ar: "الله يريد أن الجميع يخلصون. التعيين المسبق في الأرثوذكسية مبني على علم الله المسبق باختياراتنا الحرة، وليس قراراً تعسفياً.",
+            verse_en: "...who desires all men to be saved and to come to the knowledge of the truth.",
+            verse_ref_en: "1 Timothy 2:4 (NKJV)",
+            verse_ar: "...الَّذِي يُرِيدُ أَنَّ جَمِيعَ النَّاسِ يَخْلُصُونَ، وَإِلَى مَعْرِفَةِ الْحَقِّ يُقْبِلُونَ.",
+            verse_ref_ar: "تيموثاوس الأولى 2:4 (فاندايك)"
+        },
+        {
+            en: "Once a person is saved, they can never lose their salvation.",
+            ar: "بمجرد أن يخلص الإنسان، لا يمكنه أبداً أن يفقد خلاصه.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Salvation is an ongoing process. A believer can choose to walk away from God's grace and lose their salvation.",
+            exp_ar: "الخلاص هو عملية مستمرة. يمكن للمؤمن أن يختار الابتعاد عن نعمة الله ويفقد خلاصه.",
+            verse_en: "Therefore let him who thinks he stands take heed lest he fall.",
+            verse_ref_en: "1 Corinthians 10:12 (NKJV)",
+            verse_ar: "إِذًا مَنْ يَظُنُّ أَنَّهُ قَائِمٌ، فَلْيَنْظُرْ أَنْ لاَ يَسْقُطَ.",
+            verse_ref_ar: "كورنثوس الأولى 10:12 (فاندايك)"
+        },
+        {
+            en: "God's grace is irresistible; a person cannot reject it.",
+            ar: "نعمة الله لا تُقاوم؛ ولا يمكن للإنسان رفضها.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "God respects human free will. We can choose to cooperate with His grace (synergy) or reject it.",
+            exp_ar: "الله يحترم الإرادة الحرة للإنسان. يمكننا أن نختار التعاون مع نعمته (التآزر) أو رفضها.",
+            verse_en: "O Jerusalem, Jerusalem... How often I wanted to gather your children together... but you were not willing!",
+            verse_ref_en: "Matthew 23:37 (NKJV)",
+            verse_ar: "يَا أُورُشَلِيمُ، يَا أُورُشَلِيمُ... كَمْ مَرَّةٍ أَرَدْتُ أَنْ أَجْمَعَ أَوْلاَدَكِ... وَلَمْ تُرِيدُوا!",
+            verse_ref_ar: "متى 23:37 (فاندايك)"
+        },
+        {
+            en: "Repentance remains necessary throughout the Christian life.",
+            ar: "تبقى التوبة ضرورية طوال الحياة المسيحية.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Repentance is a continuous lifelong journey of turning back to God, not just a one-time event.",
+            exp_ar: "التوبة هي رحلة مستمرة طوال الحياة للرجوع إلى الله، وليست مجرد حدث يقع مرة واحدة.",
+            verse_en: "If we confess our sins, He is faithful and just to forgive us our sins and to cleanse us from all unrighteousness.",
+            verse_ref_en: "1 John 1:9 (NKJV)",
+            verse_ar: "إِنِ اعْتَرَفْنَا بِخَطَايَانَا فَهُوَ أَمِينٌ وَعَادِلٌ، حَتَّى يَغْفِرَ لَنَا خَطَايَانَا وَيُطَهِّرَنَا مِنْ كُلِّ إِثْمٍ.",
+            verse_ref_ar: "يوحنا الأولى 1:9 (فاندايك)"
+        },
+        // --- SACRAMENTS (MYSTERIES) ---
+        {
+            en: "Baptism is merely a symbolic declaration of faith.",
+            ar: "المعمودية هي مجرد إعلان رمزي للإيمان.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Baptism is a Sacrament where we are truly born again, receive the Holy Spirit, and our sins are washed away.",
+            exp_ar: "المعمودية هي سر ننال فيه حقاً الولادة الجديدة، ونستقبل الروح القدس، وتُغسل فيه خطايانا.",
+            verse_en: "Then Peter said to them, 'Repent, and let every one of you be baptized in the name of Jesus Christ for the remission of sins...'",
+            verse_ref_en: "Acts 2:38 (NKJV)",
+            verse_ar: "فَقَالَ لَهُمْ بُطْرُسُ: «تُوبُوا وَلْيَعْتَمِدْ كُلُّ وَاحِدٍ مِنْكُمْ عَلَى اسْمِ يَسُوعَ الْمَسِيحِ لِغُفْرَانِ الْخَطَايَا...»",
+            verse_ref_ar: "أعمال الرسل 2:38 (فاندايك)"
+        },
+        {
+            en: "Infants should be baptized.",
+            ar: "يجب تعميد الأطفال الرضع.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Infants are baptized based on the faith of their parents/godparents, just as circumcision brought infants into the Old Covenant.",
+            exp_ar: "يُعمد الأطفال بناءً على إيمان والديهم/العرابين، تماماً كما كان الختان يُدخل الأطفال في العهد القديم.",
+            verse_en: "For the promise is to you and to your children...",
+            verse_ref_en: "Acts 2:39 (NKJV)",
+            verse_ar: "لأَنَّ الْمَوْعِدَ هُوَ لَكُمْ وَلأَوْلاَدِكُمْ...",
+            verse_ref_ar: "أعمال الرسل 2:39 (فاندايك)"
+        },
+        {
+            en: "Chrismation (Holy Myron) is the seal of the gift of the Holy Spirit.",
+            ar: "سر الميرون المقدس هو ختم موهبة الروح القدس.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Through Chrismation, the newly baptized receives the indwelling of the Holy Spirit, replacing the laying on of hands by the Apostles.",
+            exp_ar: "من خلال الميرون، ينال المعمد حديثاً سكنى الروح القدس، وهو بديل لوضع أيادي الرسل.",
+            verse_en: "But you have an anointing from the Holy One, and you know all things.",
+            verse_ref_en: "1 John 2:20 (NKJV)",
+            verse_ar: "وَأَمَّا أَنْتُمْ فَلَكُمْ مَسْحَةٌ مِنَ الْقُدُّوسِ وَتَعْلَمُونَ كُلَّ شَيْءٍ.",
+            verse_ref_ar: "يوحنا الأولى 2:20 (فاندايك)"
+        },
+        {
+            en: "The Eucharist (Communion) is purely a symbolic memorial of Christ's death.",
+            ar: "الإفخارستيا (التناول) هي مجرد ذكرى رمزية لموت المسيح.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "The Eucharist truly becomes the actual Body and Blood of Christ through the descent of the Holy Spirit.",
+            exp_ar: "يتحول سر الإفخارستيا حقيقةً إلى جسد ودم المسيح الحقيقيين من خلال حلول الروح القدس.",
+            verse_en: "For My flesh is food indeed, and My blood is drink indeed.",
+            verse_ref_en: "John 6:55 (NKJV)",
+            verse_ar: "لأَنَّ جَسَدِي مَأْكَلٌ حَقٌّ وَدَمِي مَشْرَبٌ حَقٌّ.",
+            verse_ref_ar: "يوحنا 6:55 (فاندايك)"
+        },
+        {
+            en: "Confession to a priest has a biblical and apostolic foundation.",
+            ar: "الاعتراف أمام الكاهن له أساس كتابي ورسولي.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Christ explicitly gave His apostles (and their successors) the authority to forgive and retain sins through the Holy Spirit.",
+            exp_ar: "أعطى المسيح بوضوح لرسله (وخلفائهم الكهنة) السلطان لمغفرة الخطايا وإمساكها من خلال الروح القدس.",
+            verse_en: "If you forgive the sins of any, they are forgiven them; if you retain the sins of any, they are retained.",
+            verse_ref_en: "John 20:23 (NKJV)",
+            verse_ar: "مَنْ غَفَرْتُمْ خَطَايَاهُ تُغْفَرُ لَهُ، وَمَنْ أَمْسَكْتُمْ خَطَايَاهُ أُمْسِكَتْ.",
+            verse_ref_ar: "يوحنا 20:23 (فاندايك)"
+        },
+        {
+            en: "Anointing of the Sick (Unction) brings both spiritual and physical healing.",
+            ar: "سر مسحة المرضى يجلب الشفاء الروحي والجسدي معاً.",
+            correctAnswer: "Strongly agree",
+            exp_en: "The Sacrament of Unction is for the healing of the soul (forgiveness) and body, administered by the priests.",
+            exp_ar: "سر المسحة هو لشفاء النفس (المغفرة) والجسد، ويُمارس بواسطة الكهنة.",
+            verse_en: "Is anyone among you sick? Let him call for the elders of the church, and let them pray over him, anointing him with oil...",
+            verse_ref_en: "James 5:14 (NKJV)",
+            verse_ar: "أَمَرِيضٌ أَحَدٌ بَيْنَكُمْ؟ فَلْيَدْعُ شُيُوخَ الْكَنِيسَةِ فَيُصَلُّوا عَلَيْهِ وَيَدْهَنُوهُ بِزَيْتٍ...",
+            verse_ref_ar: "يعقوب 5:14 (فاندايك)"
+        },
+        {
+            en: "Marriage is a sacrament that models the union between Christ and the Church.",
+            ar: "الزواج هو سر يمثل الاتحاد بين المسيح والكنيسة.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Holy Matrimony is a divine mystery uniting a man and woman in Christ, reflecting His eternal love for the Church.",
+            exp_ar: "الزيجة المقدسة هي سر إلهي يوحد الرجل والمرأة في المسيح، ويعكس حبه الأبدي للكنيسة.",
+            verse_en: "This is a great mystery, but I speak concerning Christ and the church.",
+            verse_ref_en: "Ephesians 5:32 (NKJV)",
+            verse_ar: "هذَا السِّرُّ عَظِيمٌ، وَلكِنَّنِي أَنَا أَقُولُ مِنْ نَحْوِ الْمَسِيحِ وَالْكَنِيسَةِ.",
+            verse_ref_ar: "أفسس 5:32 (فاندايك)"
+        },
+        {
+            en: "The Priesthood is a continuation of the apostolic ministry.",
+            ar: "الكهنوت هو امتداد للخدمة الرسولية.",
+            correctAnswer: "Strongly agree",
+            exp_en: "The authority of the priesthood is passed down through unbroken Apostolic Succession via the laying on of hands.",
+            exp_ar: "سلطان الكهنوت ينتقل عبر التسلسل الرسولي المستمر من خلال وضع الأيادي.",
+            verse_en: "Therefore I remind you to stir up the gift of God which is in you through the laying on of my hands.",
+            verse_ref_en: "2 Timothy 1:6 (NKJV)",
+            verse_ar: "فَلِهذَا السَّبَبِ أُذَكِّرُكَ أَنْ تُضَرِّمَ أَيْضًا مَوْهِبَةَ اللهِ الَّتِي فِيكَ بِوَضْعِ يَدَيَّ.",
+            verse_ref_ar: "تيموثاوس الثانية 1:6 (فاندايك)"
+        },
+        // --- CHURCH & SAINTS ---
+        {
+            en: "The Church is more than a gathering of believers; it is the Body of Christ.",
+            ar: "الكنيسة ليست مجرد تجمع للمؤمنين بل هي جسد المسيح.",
+            correctAnswer: "Strongly agree",
+            exp_en: "The Church is a divine-human organism, mysteriously united to Christ as His own Body, with Him as the Head.",
+            exp_ar: "الكنيسة هي كائن إلهي-إنساني، متحدة سرياً بالمسيح كجسده الخاص، وهو رأسها.",
+            verse_en: "...the church, which is His body, the fullness of Him who fills all in all.",
+            verse_ref_en: "Ephesians 1:22-23 (NKJV)",
+            verse_ar: "...لِلْكَنِيسَةِ، الَّتِي هِيَ جَسَدُهُ، مِلْءُ الَّذِي يَمْلأُ الْكُلَّ فِي الْكُلِّ.",
+            verse_ref_ar: "أفسس 1:22-23 (فاندايك)"
+        },
+        {
+            en: "The Pope/Patriarch is infallible when speaking on matters of faith.",
+            ar: "البابا/البطريرك معصوم من الخطأ عندما يتحدث في أمور الإيمان.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Orthodoxy does not accept Papal Infallibility. The Holy Spirit guides the *whole* Church, primarily expressed through Ecumenical Councils, not a single bishop.",
+            exp_ar: "لا تقبل الأرثوذكسية عصمة البابا. الروح القدس يرشد الكنيسة ككل، ويُعبر عن ذلك أساساً من خلال المجامع المسكونية، وليس من خلال أسقف واحد.",
+            verse_en: "For we all stumble in many things.",
+            verse_ref_en: "James 3:2 (NKJV)",
+            verse_ar: "لأَنَّنَا فِي أَشْيَاءَ كَثِيرَةٍ نَعْثُرُ جَمِيعُنَا.",
+            verse_ref_ar: "يعقوب 3:2 (فاندايك)"
+        },
+        {
+            en: "The Virgin Mary is rightly called Theotokos (Mother of God).",
+            ar: "تدعى العذراء مريم بحق 'والدة الإله'.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Because Jesus Christ is fully God and fully Man united in one Person, Mary gave birth to God the Word incarnate.",
+            exp_ar: "لأن يسوع المسيح هو إله كامل وإنسان كامل متحد في أقنوم واحد، فإن مريم ولدت الله الكلمة المتجسد.",
+            verse_en: "But why is this granted to me, that the mother of my Lord should come to me?",
+            verse_ref_en: "Luke 1:43 (NKJV)",
+            verse_ar: "فَمِنْ أَيْنَ لِي هذَا أَنْ تَأْتِيَ أُمُّ رَبِّي إِلَيَّ؟",
+            verse_ref_ar: "لوقا 1:43 (فاندايك)"
+        },
+        {
+            en: "The Virgin Mary was conceived without original sin (Immaculate Conception).",
+            ar: "العذراء مريم حُبل بها بلا خطية أصلية (الحبل بلا دنس).",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Orthodoxy teaches Mary inherited mortality like all humans and needed a Savior, though she lived a pure life and was cleansed at the Annunciation.",
+            exp_ar: "تعلم الأرثوذكسية أن مريم ورثت طبيعة الموت ككل البشر وكانت بحاجة لمخلص، رغم أنها عاشت حياة طاهرة وتطهرت بالكامل وقت البشارة.",
+            verse_en: "And my spirit has rejoiced in God my Savior.",
+            verse_ref_en: "Luke 1:47 (NKJV)",
+            verse_ar: "وَتَبْتَهِجُ رُوحِي بِاللهِ مُخَلِّصِي.",
+            verse_ref_ar: "لوقا 1:47 (فاندايك)"
+        },
+        {
+            en: "Asking for the intercession of Saints is biblical.",
+            ar: "طلب شفاعة القديسين له أساس كتابي.",
+            correctAnswer: "Strongly agree",
+            exp_en: "We ask saints to pray for us just as we ask friends on earth. In Christ, the departed saints are alive and actively praying.",
+            exp_ar: "نطلب من القديسين أن يصلوا لأجلنا كما نطلب من أصدقائنا على الأرض. في المسيح، القديسون الراحلون أحياء ويصلون بفعالية.",
+            verse_en: "The effective, fervent prayer of a righteous man avails much.",
+            verse_ref_en: "James 5:16 (NKJV)",
+            verse_ar: "طِلْبَةُ الْبَارِّ تَقْتَدِرُ كَثِيرًا فِي فِعْلِهَا.",
+            verse_ref_ar: "يعقوب 5:16 (فاندايك)"
+        },
+        {
+            en: "Veneration of icons is a form of idolatry.",
+            ar: "تكريم الأيقونات هو شكل من أشكال عبادة الأصنام.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "We venerate (honor) the person depicted, not the wood or paint. Since Christ became visible in the flesh, He can be depicted.",
+            exp_ar: "نحن نكرم الشخص المرسوم وليس الخشب أو الألوان. بما أن المسيح صار مرئياً في الجسد، يمكن تصويره.",
+            verse_en: "He is the image of the invisible God...",
+            verse_ref_en: "Colossians 1:15 (NKJV)",
+            verse_ar: "اَلَّذِي هُوَ صُورَةُ اللهِ غَيْرِ الْمَنْظُورِ...",
+            verse_ref_ar: "كولوسي 1:15 (فاندايك)"
+        },
+        {
+            en: "The dead in Christ continue to pray for us.",
+            ar: "الأموات في المسيح يستمرون في الصلاة من أجلنا.",
+            correctAnswer: "Strongly agree",
+            exp_en: "The Church Triumphant (in heaven) and the Church Militant (on earth) are united. The departed saints offer prayers like incense before God.",
+            exp_ar: "الكنيسة المنتصرة (في السماء) والكنيسة المجاهدة (على الأرض) متحدتان. القديسون الراحلون يقدمون صلوات كالبخور أمام الله.",
+            verse_en: "...golden bowls full of incense, which are the prayers of the saints.",
+            verse_ref_en: "Revelation 5:8 (NKJV)",
+            verse_ar: "...جَامَاتٍ مِنْ ذَهَبٍ مَمْلُوَّةً بَخُورًا هِيَ صَلَوَاتُ الْقِدِّيسِينَ.",
+            verse_ref_ar: "رؤيا يوحنا 5:8 (فاندايك)"
+        },
+        {
+            en: "Fasting is no longer necessary in the New Testament.",
+            ar: "لم يعد الصوم ضرورياً في العهد الجديد.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Christ specifically expected His disciples to fast after He ascended, and the early Church practiced fasting regularly.",
+            exp_ar: "المسيح توقع بوضوح أن يصوم تلاميذه بعد صعوده، والكنيسة الأولى مارست الصوم بانتظام.",
+            verse_en: "But the days will come when the bridegroom will be taken away from them, and then they will fast in those days.",
+            verse_ref_en: "Luke 5:35 (NKJV)",
+            verse_ar: "وَلكِنْ سَتَأْتِي أَيَّامٌ حِينَ يُرْفَعُ الْعَرِيسُ عَنْهُمْ، فَحِينَئِذٍ يَصُومُونَ فِي تِلْكَ الأَيَّامِ.",
+            verse_ref_ar: "لوقا 5:35 (فاندايك)"
+        },
+        // --- ESCHATOLOGY (END TIMES) ---
+        {
+            en: "Purgatory exists as a place of cleansing by fire after death.",
+            ar: "المطهر موجود كمكان للتطهير بالنار بعد الموت.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Orthodoxy rejects the Catholic doctrine of Purgatory. Souls wait in a foretaste of Paradise or Hades until the Final Judgment.",
+            exp_ar: "ترفض الأرثوذكسية عقيدة المطهر الكاثوليكية. الأرواح تنتظر في عربون الفردوس أو الهاوية حتى الدينونة الأخيرة.",
+            verse_en: "And Jesus said to him, 'Assuredly, I say to you, today you will be with Me in Paradise.'",
+            verse_ref_en: "Luke 23:43 (NKJV)",
+            verse_ar: "فَقَالَ لَهُ يَسُوعُ: «الْحَقَّ أَقُولُ لَكَ: إِنَّكَ الْيَوْمَ تَكُونُ مَعِي فِي الْفِرْدَوْسِ».",
+            verse_ref_ar: "لوقا 23:43 (فاندايك)"
+        },
+        {
+            en: "Hell is a temporary state of purification and eventually everyone goes to heaven.",
+            ar: "الجحيم هو حالة مؤقتة للتطهير وفي النهاية سيذهب الجميع إلى السماء.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Universalism is a heresy. The Bible and the Church clearly teach that Hell (Gehenna) is an eternal separation from God.",
+            exp_ar: "بدعة الخلاص الشامل مرفوضة. الكتاب المقدس والكنيسة يعلمان بوضوح أن جهنم هي انفصال أبدي عن الله.",
+            verse_en: "And these will go away into everlasting punishment, but the righteous into eternal life.",
+            verse_ref_en: "Matthew 25:46 (NKJV)",
+            verse_ar: "فَيَمْضِي هؤُلاَءِ إِلَى عَذَابٍ أَبَدِيٍّ وَالأَبْرَارُ إِلَى حَيَاةٍ أَبَدِيَّةٍ.",
+            verse_ref_ar: "متى 25:46 (فاندايك)"
+        },
+        {
+            en: "Christ will return to establish a literal 1000-year earthly kingdom (Premillennialism).",
+            ar: "سيعود المسيح ليؤسس مملكة أرضية حرفية مدتها 1000 عام (الحكم الألفي).",
+            correctAnswer: "Strongly disagree",
+            exp_en: "The Orthodox Church holds an Amillennial view: The '1000 years' is symbolic of the current Church age between Christ's first and second coming.",
+            exp_ar: "تؤمن الكنيسة الأرثوذكسية برمزية الألف سنة: وهي ترمز لعصر الكنيسة الحالي بين المجيء الأول والثاني للمسيح.",
+            verse_en: "Jesus answered, 'My kingdom is not of this world...'",
+            verse_ref_en: "John 18:36 (NKJV)",
+            verse_ar: "أَجَابَ يَسُوعُ: «مَمْلَكَتِي لَيْسَتْ مِنْ هذَا الْعَالَمِ...»",
+            verse_ref_ar: "يوحنا 18:36 (فاندايك)"
+        },
+        {
+            en: "We should pray for the departed souls.",
+            ar: "يجب أن نصلي من أجل أرواح المنتقلين.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Prayers for the departed are an ancient Christian practice, asking for God's mercy on them as we wait together for the resurrection.",
+            exp_ar: "الصلاة من أجل المنتقلين هي ممارسة مسيحية قديمة، نطلب فيها رحمة الله عليهم ونحن ننتظر معاً القيامة.",
+            verse_en: "The Lord grant mercy to the household of Onesiphorus... The Lord grant to him that he may find mercy from the Lord in that Day...",
+            verse_ref_en: "2 Timothy 1:16-18 (NKJV)",
+            verse_ar: "لِيُعْطِ الرَّبُّ رَحْمَةً لِبَيْتِ أُنِيسِيفُورُسَ... لِيُعْطِهِ الرَّبُّ أَنْ يَجِدَ رَحْمَةً مِنَ الرَّبِّ فِي ذلِكَ الْيَوْمِ...",
+            verse_ref_ar: "تيموثاوس الثانية 1:16-18 (فاندايك)"
+        },
+        {
+            en: "The Second Coming of Christ will be visible to all people simultaneously.",
+            ar: "المجيء الثاني للمسيح سيكون مرئياً لجميع الناس في نفس الوقت.",
+            correctAnswer: "Strongly agree",
+            exp_en: "Orthodoxy rejects the 'secret rapture' theory. Christ's return will be glorious, sudden, and visible to the whole world.",
+            exp_ar: "ترفض الأرثوذكسية نظرية 'الاختطاف السري'. عودة المسيح ستكون مجيدة، مفاجئة، ومرئية للعالم كله.",
+            verse_en: "Behold, He is coming with clouds, and every eye will see Him...",
+            verse_ref_en: "Revelation 1:7 (NKJV)",
+            verse_ar: "هُوَذَا يَأْتِي مَعَ السَّحَابِ، وَسَتَنْظُرُهُ كُلُّ عَيْنٍ...",
+            verse_ref_ar: "رؤيا يوحنا 1:7 (فاندايك)"
+        },
+        // --- ADDING MORE CORE DOCTRINES TO REACH 40 ---
+        {
+            en: "Christ's sacrifice on the cross was only for a chosen group of 'elect' people.",
+            ar: "تضحية المسيح على الصليب كانت فقط لمجموعة مختارة من الناس.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Orthodoxy rejects Limited Atonement. Christ died for the sins of the whole world, though only those who believe and participate will be saved.",
+            exp_ar: "ترفض الأرثوذكسية الكفارة المحدودة. المسيح مات من أجل خطايا العالم أجمع، رغم أن الذين يؤمنون ويشتركون هم فقط من سيخلصون.",
+            verse_en: "And He Himself is the propitiation for our sins, and not for ours only but also for the whole world.",
+            verse_ref_en: "1 John 2:2 (NKJV)",
+            verse_ar: "وَهُوَ كَفَّارَةٌ لِخَطَايَانَا. لَيْسَ لِخَطَايَانَا فَقَطْ، بَلْ لِخَطَايَا كُلِّ الْعَالَمِ أَيْضًا.",
+            verse_ref_ar: "يوحنا الأولى 2:2 (فاندايك)"
+        },
+        {
+            en: "The Son is a creation of the Father, and there was a time when He did not exist.",
+            ar: "الابن هو خليقة الآب، وكان هناك وقت لم يكن فيه موجوداً.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "This is the Arian heresy. The Son is co-eternal and of the same essence (Homoousios) as the Father.",
+            exp_ar: "هذه هي الهرطقة الأريوسية. الابن أزلي ومساوٍ للآب في الجوهر.",
+            verse_en: "In the beginning was the Word, and the Word was with God, and the Word was God.",
+            verse_ref_en: "John 1:1 (NKJV)",
+            verse_ar: "فِي الْبَدْءِ كَانَ الْكَلِمَةُ، وَالْكَلِمَةُ كَانَ عِنْدَ اللهِ، وَكَانَ الْكَلِمَةُ اللهَ.",
+            verse_ref_ar: "يوحنا 1:1 (فاندايك)"
+        },
+        {
+            en: "The Holy Spirit is a divine power or force, not a Person of the Trinity.",
+            ar: "الروح القدس هو قوة إلهية، وليس أقنوماً من الثالوث.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "The Holy Spirit is a distinct, divine Person (Hypostasis), fully God, who possesses will and intelligence.",
+            exp_ar: "الروح القدس هو أقنوم إلهي متمايز، إله كامل، له إرادة ومعرفة.",
+            verse_en: "But Peter said, 'Ananias, why has Satan filled your heart to lie to the Holy Spirit... You have not lied to men but to God.'",
+            verse_ref_en: "Acts 5:3-4 (NKJV)",
+            verse_ar: "فَقَالَ بُطْرُسُ: «يَا حَنَانِيَّا، لِمَاذَا مَلأَ الشَّيْطَانُ قَلْبَكَ لِتَكْذِبَ عَلَى الرُوحِ الْقُدُسِ... أَنْتَ لَمْ تَكْذِبْ عَلَى النَّاسِ بَلْ عَلَى اللهِ».",
+            verse_ref_ar: "أعمال الرسل 5:3-4 (فاندايك)"
+        },
+        {
+            en: "A Bishop must be married according to Orthodox Tradition.",
+            ar: "يجب أن يكون الأسقف متزوجاً بحسب التقليد الأرثوذكسي.",
+            correctAnswer: "Strongly disagree",
+            exp_en: "Since the early Ecumenical Councils, Orthodox tradition requires bishops to be celibate (monks), while parish priests are usually married.",
+            exp_ar: "منذ المجامع المسكونية الأولى، يشترط التقليد الأرثوذكسي أن يكون الأساقفة بتوليين (رهباناً)، بينما الكهنة عادة يكونون متزوجين.",
+            verse_en: "He who is unmarried cares for the things of the Lord—how he may please the Lord.",
+            verse_ref_en: "1 Corinthians 7:32 (NKJV)",
+            verse_ar: "غَيْرُ الْمُتَزَوِّجِ يَهْتَمُّ فِي مَا لِلرَّبِّ كَيْفَ يُرْضِي الرَّبَّ.",
+            verse_ref_ar: "كورنثوس الأولى 7:32 (فاندايك)"
+        },
+        {
+            en: "God's Grace and human free will must work together for salvation (Synergy).",
+            ar: "نعمة الله والإرادة الحرة للإنسان يجب أن يعملا معاً للخلاص (التآزر).",
+            correctAnswer: "Strongly agree",
+            exp_en: "God extends His saving grace, but humanity must willingly accept and cooperate with it through faith and works.",
+            exp_ar: "الله يقدم نعمته المخلصة، ولكن يجب على الإنسان أن يقبلها ويتعاون معها طواعية من خلال الإيمان والأعمال.",
+            verse_en: "For we are God's fellow workers...",
+            verse_ref_en: "1 Corinthians 3:9 (NKJV)",
+            verse_ar: "فَإِنَّنَا نَحْنُ عَامِلاَنِ مَعَ اللهِ...",
+            verse_ref_ar: "كورنثوس الأولى 3:9 (فاندايك)"
+        }
+    ];
+
+    const options = ["Strongly agree", "Agree", "Not sure", "Disagree", "Strongly disagree"];
+
+    function renderSurvey() {
+        const container = document.getElementById('survey-container');
+        
+        surveyData.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-card-${index}`;
+            
+            // Generate HTML for options
+            let optionsHtml = '';
+            options.forEach(opt => {
+                optionsHtml += `
+                    <label class="option-label" data-value="${opt}" onclick="handleSelect(${index}, '${opt}')">
+                        <input type="radio" name="q${index}" value="${opt}">
+                        ${opt}
+                        <div class="ar-opt">${arOptions[opt]}</div>
+                    </label>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="question-text-en">${index + 1}. ${q.en}</div>
+                <div class="question-text-ar">${q.ar}</div>
+                
+                <div class="options-grid" id="options-${index}">
+                    ${optionsHtml}
+                </div>
+
+                <div class="feedback-section" id="feedback-${index}">
+                    <div class="result-title" id="result-title-${index}"></div>
+                    
+                    <div class="explanation">
+                        <strong>Explanation:</strong> ${q.exp_en}
+                        <div class="ar"><strong>الشرح:</strong> ${q.exp_ar}</div>
+                    </div>
+                    
+                    <div class="verses">
+                        <span class="verse-ref">${q.verse_ref_en}</span>
+                        "${q.verse_en}"
+                        <div class="ar-verse">
+                            <span class="verse-ref">${q.verse_ref_ar}</span>
+                            "${q.verse_ar}"
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Function exposed to window to handle the click logic
+    window.handleSelect = function(questionIndex, selectedValue) {
+        const questionData = surveyData[questionIndex];
+        const optionsContainer = document.getElementById(`options-${questionIndex}`);
+        
+        // Prevent changing answer if already answered
+        if (optionsContainer.classList.contains('answered')) return;
+        
+        optionsContainer.classList.add('answered');
+        const labels = optionsContainer.getElementsByClassName('option-label');
+        const correctAnswer = questionData.correctAnswer;
+        const isCorrect = (selectedValue === correctAnswer);
+
+        // Apply colors and styling to the options
+        for (let label of labels) {
+            const labelValue = label.getAttribute('data-value');
+            
+            if (labelValue === correctAnswer) {
+                // Always highlight the correct answer in green
+                label.classList.add('correct-choice');
+            } else if (labelValue === selectedValue && !isCorrect) {
+                // If they picked wrong, highlight their choice in red
+                label.classList.add('wrong-choice');
+            } else {
+                // Dim the unselected options
+                label.classList.add('dimmed-choice');
+            }
+        }
+
+        // Setup Feedback Display
+        const feedbackDiv = document.getElementById(`feedback-${questionIndex}`);
+        const resultTitle = document.getElementById(`result-title-${questionIndex}`);
+        
+        feedbackDiv.className = 'feedback-section';
+        
+        if (isCorrect) {
+            feedbackDiv.classList.add('correct');
+            resultTitle.innerHTML = '✓ Correct / إجابة صحيحة';
+        } else {
+            feedbackDiv.classList.add('wrong');
+            resultTitle.innerHTML = `
+                ✗ Incorrect / إجابة خاطئة
+                <div class="correct-view-box">
+                    <strong>The correct Orthodox view is:</strong> ${correctAnswer}<br>
+                    <strong style="direction: rtl; display: block; margin-top: 5px;">الرأي الأرثوذكسي الصحيح هو: ${arOptions[correctAnswer]}</strong>
+                </div>
+            `;
+        }
+        
+        feedbackDiv.style.display = 'block';
+    }
+
+    // Initialize application on DOM load
+    document.addEventListener('DOMContentLoaded', renderSurvey);
+</script>
+
+</body>
+</html>
